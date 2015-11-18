@@ -1,0 +1,270 @@
+package edu.upenn.cis455.storage;
+
+import com.sleepycat.je.DatabaseException;
+import com.sleepycat.persist.EntityCursor;
+import com.sleepycat.persist.PrimaryIndex;
+import com.sleepycat.persist.StoreConfig;
+import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentConfig;
+
+import java.io.File;
+import java.util.ArrayList;
+
+import com.sleepycat.persist.EntityStore;
+
+
+public class DBWrapper 
+{
+
+	private static String envDirectory = null;
+
+	private static Environment myEnv;
+	private static EntityStore store;
+	File dbFile;
+
+	// declaring primary keys
+
+	private static PrimaryIndex<String,UserEntityClass> user_key;
+	private static PrimaryIndex<String,ChannelEntityClass> channel_key;
+	private static PrimaryIndex<String,CrawledUrlEntity> crawledUrl_key;
+
+	/* TODO: write object store wrapper for BerkeleyDB */
+	// DBManagement envManage=null;
+	/**
+	 * creating constructor of the DBWraper class to set up the DB environment
+	 * @param dbFileString
+	 */
+	public DBWrapper(String dbFileString)
+	{
+		try
+		{
+
+			// myEnv=envManage.getEnvironment();
+
+			if( myEnv !=null && myEnv.isValid() && dbFileString.equals(envDirectory))
+			{
+				return;
+			}	
+
+
+			this.envDirectory=dbFileString;	
+			if((envDirectory == null)||(envDirectory==""))
+			{
+				envDirectory = System.getProperty("user.dir") + "/database";
+			}		  
+
+			File db_file=new File(envDirectory);	
+			if(db_file.exists())
+			{
+				this.dbFile=db_file;
+			}  
+			else
+			{
+				db_file.mkdir();
+				this.dbFile=db_file;
+			}   
+
+			//envManage= new DBManagement(dbFile);
+			EnvironmentConfig config_obj=new EnvironmentConfig();
+			StoreConfig store_config=new StoreConfig();
+			config_obj.setAllowCreate(true);
+			config_obj.setSharedCache(true);
+			config_obj.setTransactional(true);
+			store_config.setAllowCreate(true);
+			store_config.setDeferredWrite(true);
+			
+
+			myEnv=new Environment(dbFile,config_obj);
+			store=new EntityStore(myEnv,"EntityStore",store_config);
+
+
+		}
+		catch(DatabaseException db)
+		{
+			System.out.println("Exception occurred while setting database..."+db);
+		}
+		// assigning values to primary keys
+		// store= envManage.getStore();
+		user_key=store.getPrimaryIndex(String.class,UserEntityClass.class);
+		channel_key=store.getPrimaryIndex(String.class,ChannelEntityClass.class);
+		crawledUrl_key=store.getPrimaryIndex(String.class,CrawledUrlEntity.class);
+
+	} 
+	/**
+	 * adding user instance in UserEntity
+	 * @param user
+	 */
+	public static void putUser(UserEntityClass user)
+	{
+		try
+		{
+			if(user!=null)
+			{	 
+				user_key.put(user);
+			}  
+			store.sync();
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception occurred while adding the user entity..."+e);
+		}
+	}
+
+	/**
+	 * return a user instance on the basis of the username(primary key)
+	 * @param username
+	 * @return
+	 */
+	public static UserEntityClass getUser(String username)
+	{
+		return user_key.get(username);
+	}
+
+	public static boolean containsUser(String name)
+	{
+		return user_key.contains(name);
+	}
+	/**
+	 * check if the corressponding username and password are stored in the database
+	 * @param name
+	 * @param pwd
+	 * @return
+	 */
+
+	public static boolean authenticateUser(String name,String pwd)
+	{
+		if(user_key.contains(name))
+		{
+			String password=user_key.get(name).getPassword();
+			if(pwd.equals(password))
+				return true;	
+		}	
+		return false;
+	}
+	/**
+	 * add an instance of ChannelEntityClass
+	 * @param channel
+	 */
+	public static void putChannel(ChannelEntityClass channel)
+	{
+		try
+		{
+			if(channel!=null)
+			{	
+				channel_key.put(channel);
+			}
+			store.sync();
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception occurred while adding the channel...+e");
+		}
+	}
+	/**
+	 * return an instance of channelEntity
+	 * @param channelName
+	 * @return
+	 */
+	public static ChannelEntityClass getChannel(String channelName)
+	{
+		return channel_key.get(channelName);
+	}
+	/**
+	 * checks if the channel already exists
+	 * @param channelName
+	 * @return
+	 */
+	public static boolean checkChannel(String channelName)
+	{
+		return channel_key.contains(channelName);
+	}
+	/**
+	 * checking if the list of channel names associated with a particular user contains that channel name
+	 * @param username
+	 * @param channelName
+	 * @return
+	 */
+	public static boolean checkUserChannel(String username, String channelName)
+	{
+		ArrayList<String> user_channel_names=user_key.get(username).getChannelNames();
+		return user_channel_names.contains(channelName);
+	}
+	/**
+	 * returning a list of all the channel instances in the channelEntity table
+	 * @return
+	 */
+	public static ArrayList<ChannelEntityClass> getAllChannels()
+	{
+		ArrayList<ChannelEntityClass> channel_list=new ArrayList<ChannelEntityClass>();
+		ChannelEntityClass channel;
+		//iterate over entities
+		EntityCursor<ChannelEntityClass> entity_cursor= channel_key.entities();
+		try
+		{
+			while((channel=entity_cursor.next())!=null)
+			{
+				channel_list.add(channel);
+			}	
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception occurred while iterating over channel entity.."+e);
+		}
+		finally
+		{
+			entity_cursor.close();
+		}
+		return channel_list;	
+
+	}
+	/**
+	 * deleting the channel name associated with given user
+	 * @param username
+	 * @param channelName
+	 */
+	public static void deleteChannel(String username,String channelName)
+	{
+		channel_key.delete(channelName);
+
+		UserEntityClass channelOwner=user_key.get(username);
+		channelOwner.getChannelNames().remove(channelName);
+		putUser(channelOwner);
+	}
+	/**
+	 * add an instance of CrawledUrlEntity
+	 * @param url
+	 */
+	public static void addCrawledUrlEntity(CrawledUrlEntity url)
+	{
+		try
+		{
+			if(url != null)
+			{
+				crawledUrl_key.put(url);
+			}	  
+			store.sync();
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception occurred while adding the url..."+e);
+		}
+	}
+	/**
+	 * return the CrawledUrlEntity instance on the basis of url name
+	 * @param url
+	 * @return
+	 */
+	public static CrawledUrlEntity getCrawledUrlEntity(String url)
+	{
+		return crawledUrl_key.get(url);
+	}
+
+	/**
+	 * deletes the CrawledUrlEntity on the basis of url name
+	 * @param url
+	 */
+	public void deleteCrawledUrlEntity(String url)
+	{
+		crawledUrl_key.delete(url);	
+	}
+}

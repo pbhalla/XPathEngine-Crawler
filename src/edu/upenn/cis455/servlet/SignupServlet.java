@@ -1,0 +1,66 @@
+package edu.upenn.cis455.servlet;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+
+import java.io.*;
+
+import edu.upenn.cis455.storage.DBWrapper;
+import edu.upenn.cis455.storage.UserEntityClass;
+
+public class SignupServlet extends HttpServlet
+{
+	public void doGet(HttpServletRequest req, HttpServletResponse res)throws ServletException,IOException
+    {
+    	PrintWriter obj =res.getWriter();
+    	StringBuffer content=new StringBuffer("<!doctype html>\n");
+    	System.out.println("Inside get..");
+    	content.append("<html>\n<head><title></title></head><body>\n");
+		content.append("<form action='signup' method='POST'>\n");
+		content.append("Username: <br/><br/>");
+		content.append("<input type='text' name='username' id='username'><br/><br/>");
+		content.append("Password: <br/><br/>");
+		content.append("<input type='text' name='password' id='password'><br/><br/>");
+		content.append("<input type='submit' value='Submit' /><br/>");
+		content.append("</form>\n</body>\n</html>");
+		
+		obj.println(content);
+    	
+    }
+    public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException,IOException
+    {
+    	System.out.println("Inside post...");
+       String user_name=req.getParameter("username");
+       String password=req.getParameter("password");
+       ServletContext context=getServletContext();
+       // adding the user to database
+       if(user_name.isEmpty() || password.isEmpty())
+		{
+			doGet(req, res);
+		}
+		if(DBWrapper.containsUser(user_name))
+		{
+			// user already exists in db
+			context.setAttribute("result_info","user already exists");
+			res.sendRedirect("/servlet/showResults");
+			return;
+		}
+		else
+		{
+			System.out.println("came here");
+			UserEntityClass user = new UserEntityClass(user_name, password);
+			DBWrapper.putUser(user);
+			context.setAttribute("result_info","user registered successfully");
+			res.sendRedirect("/servlet/showResults");
+			return;
+		}
+
+        
+    	
+    }
+
+}

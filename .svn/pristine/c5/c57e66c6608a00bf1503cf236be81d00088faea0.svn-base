@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.8.4
+Created-By: 1.7.0_67-b01 (Oracle Corporation)
+Main-Class: com.sleepycat.je.utilint.JarMain
+Premain-Class: com.sleepycat.persist.model.ClassEnhancer
+Implementation-Title: Berkeley DB Java Edition
+Implementation-Version: 6.2.31
+Implementation-Vendor: Oracle
+Implementation-URL: http://www.oracle.com/
+Build-Date: 2014-12-17 02:32:26 UTC
+Build-Id: b5d4cad25304
+

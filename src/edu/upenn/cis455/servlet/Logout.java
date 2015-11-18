@@ -1,0 +1,36 @@
+package edu.upenn.cis455.servlet;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+
+import java.io.*;
+
+import edu.upenn.cis455.storage.DBWrapper;
+public class Logout extends HttpServlet
+{
+	public void doGet(HttpServletRequest req,HttpServletResponse res)throws ServletException,IOException
+	{
+		PrintWriter obj =res.getWriter();
+		StringBuffer content=new StringBuffer("<!doctype html>\n");
+		content.append("<html>\n<head><title></title></head><body>\n");
+		content.append("<form action='logout' method='POST'>\n");
+		content.append("<input type='submit' value='Logout' /><br/><br/>");
+        content.append("</form>\n</body>\n</html>");
+		
+		obj.println(content);
+    	
+
+	}
+	public void doPost(HttpServletRequest req, HttpServletResponse res)throws ServletException,IOException
+	{
+		req.getSession().setAttribute("username", null);
+		ServletContext context=getServletContext();
+		context.setAttribute("result_info","logout");
+		res.sendRedirect("/servlet/showResults");
+		return;
+	}
+}

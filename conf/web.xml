@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app 
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" 
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+ <web-app>
+   <display-name>Channel Subscription Servlets</display-name>
+   <context-param>
+     <param-name>BDBstore</param-name>
+     <param-value>/Users/paro/Documents/IWS Assignments/HW2/database</param-value>
+   </context-param>
+    
+   <servlet>
+     <servlet-name>xpath</servlet-name>
+     <servlet-class>edu.upenn.cis455.servlet.XPathServlet</servlet-class> 
+   </servlet>
+   
+  
+   <servlet>
+    <servlet-name>login</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.LoginServlet</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+    
+     <servlet>
+    <servlet-name>signup</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.SignupServlet</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+  
+   <servlet>
+    <servlet-name>showResults</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.ShowResults</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+  
+   <servlet>
+    <servlet-name>addChannel</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.AddChannel</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>deleteChannel</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.DeleteChannel</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>displayChannel</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.DisplayChannels</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+   <servlet>
+    <servlet-name>channelDisplay</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.ChannelDisplay</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>displayXml</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.DisplayXML</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>logout</servlet-name>
+    <servlet-class>edu.upenn.cis455.servlet.Logout</servlet-class><load-on-startup>1</load-on-startup>
+  </servlet>
+   <servlet-mapping>
+     <servlet-name>xpath</servlet-name>
+     <url-pattern>/xpath</url-pattern>
+   </servlet-mapping> 
+   
+  
+  <servlet-mapping>
+     <servlet-name>login</servlet-name>
+     <url-pattern>/login</url-pattern>
+   </servlet-mapping> 
+   
+   <servlet-mapping>
+     <servlet-name>signup</servlet-name>
+     <url-pattern>/signup</url-pattern>
+   </servlet-mapping>
+   
+   <servlet-mapping>
+     <servlet-name>showResults</servlet-name>
+     <url-pattern>/showResults</url-pattern>
+   </servlet-mapping>
+   
+   <servlet-mapping>
+     <servlet-name>addChannel</servlet-name>
+     <url-pattern>/addChannel</url-pattern>
+   </servlet-mapping>
+
+    <servlet-mapping>
+     <servlet-name>deleteChannel</servlet-name>
+     <url-pattern>/deleteChannel</url-pattern>
+   </servlet-mapping>
+   
+   <servlet-mapping>
+     <servlet-name>displayChannel</servlet-name>
+     <url-pattern>/displayChannel</url-pattern>
+   </servlet-mapping>
+   
+   <servlet-mapping>
+     <servlet-name>channelDisplay</servlet-name>
+     <url-pattern>/channelDisplay</url-pattern>
+   </servlet-mapping>
+   
+   <servlet-mapping>
+     <servlet-name>logout</servlet-name>
+     <url-pattern>/logout</url-pattern>
+   </servlet-mapping>
+   
+   <servlet-mapping>
+     <servlet-name>displayXml</servlet-name>
+     <url-pattern>/displayXml</url-pattern>
+   </servlet-mapping>
+   <!-- add any additional servlets and servlet mappings here -->
+
+</web-app>

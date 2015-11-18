@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/je-6.2.31.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/jtidy-r938.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/junit.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/servlet-api.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/paro/Documents/IWS/grading/hw1m2/httpclient-4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/paro/Documents/IWS/grading/hw1m2/httpcore-4.0.jar"/>
+	<classpathentry kind="output" path="target/classes/"/>
+</classpath>

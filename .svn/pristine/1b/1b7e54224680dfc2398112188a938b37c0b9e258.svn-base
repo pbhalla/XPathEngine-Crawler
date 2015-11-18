@@ -1,0 +1,49 @@
+package edu.upenn.cis455.servlet;
+
+import javax.servlet.http.*;
+import java.io.*;
+import javax.servlet.*;
+
+@SuppressWarnings("serial")
+public class XPathServlet extends HttpServlet
+{
+	
+	/* TODO: Implement user interface for XPath engine here */
+	
+	/* You may want to override one or both of the following methods */
+
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+	{
+		/* TODO: Implement user interface for XPath engine here */
+
+		
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException,IOException
+	{
+		/* TODO: Implement user interface for XPath engine here */
+		//making a HTML form
+		response.setContentType("text/html");
+        PrintWriter output=response.getWriter();
+		StringBuffer displayStr= new StringBuffer("<!doctype html>\n");
+		displayStr.append("<html>\n<body>\n");
+		displayStr.append("<form action='HandlerServlet' method='POST'>\n");
+		displayStr.append("XPath: <input type='text' name='xpath'><br/>");
+		displayStr.append("URL: <input type='text' name='url'><br/>");
+        displayStr.append("<input type='submit' value='Submit' />");
+        displayStr.append("</form>\n</body>\n</html>");
+        output.println(displayStr);
+	}
+
+}
+
+
+
+
+
+
+
+
+

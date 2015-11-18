@@ -1,0 +1,289 @@
+package edu.upenn.cis455.crawler;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+
+import edu.upenn.cis455.storage.*;
+import edu.upenn.cis455.servlet.HttpClient;
+public class CrawlerThread //extends Thread
+{
+	UrlQueue queue_obj=null;
+	PolitenessCheck polite=null;
+	String url_removed=null;
+	HttpClient client=null;
+	HashMap<String,String> response_header;
+	ProcessUrl process_url_obj=null;
+	String content_type=null;
+	static int counter=0;
+	boolean is_relocation=false;
+	//boolean is_polite=true;
+
+	CrawledUrlEntity webpage=null;
+	public CrawlerThread()
+	{
+		queue_obj=new UrlQueue();
+		polite=new PolitenessCheck();
+		process_url_obj=new ProcessUrl();
+	}
+	public void run()
+	{
+
+		while(!XPathCrawler.shared_url_queue.isEmpty())
+		{
+			try
+			{
+				url_removed=queue_obj.removeUrl();
+				System.out.println("[DEBUG] URL : "+url_removed);
+			}
+			catch(Exception e)
+			{
+				System.out.println("exception occurred in removing element from queue..."+e);
+			}
+			try
+			{
+				webpage= fetchWebpage(url_removed);
+				if (webpage == null)
+				{
+					continue;
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception while fetching url.."+e);
+			}
+			System.out.println("Fetched webpage...");
+			try
+			{
+				process_url_obj.processUrl( webpage,queue_obj );
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception while fetching url..."+e);
+			}
+			System.out.println("url processed...");
+
+			System.out.println("Counter..."+CrawlerThread.counter);
+			if(CrawlerThread.counter>=XPathCrawler.no_of_files)
+				break;	
+		}
+
+
+		// checking politeness and if polite fetching webpage
+
+	}
+
+	public CrawledUrlEntity fetchWebpage(String url) throws MalformedURLException
+	{
+		is_relocation=false;
+
+		client=new HttpClient(url);
+		// checking for politeness
+		boolean isPolite= polite.checkPolite(url);
+		System.out.println(isPolite);
+
+		// checking the size of the file
+		boolean isValid=validFile(url);
+
+		if(!isPolite)
+		{
+			return null;
+		}
+		System.out.println("valid file....");
+		if(!isValid)
+			return null;	
+
+		//downloading the webpage
+		CrawledUrlEntity page = downloadPage();
+		System.out.println("download page...");
+		return page;
+
+	}
+
+	public boolean validFile(String url)
+	{
+		// retrieve the response header by sending the head request
+		response_header=client.getHead(url);
+
+		// check if any headers retrieved
+		if(response_header==null)
+			return false;
+		// check for content type
+		System.out.println("response header got...");
+		// checking for location in response header
+		if(response_header.containsKey("location"))
+		{
+			try
+			{
+				System.err.println("[debug] in location");
+				//URL obj=new URL(url);
+				String loc=response_header.get("location");
+				if(loc.startsWith("/"))
+				{
+					URL url_obj = new URL(url);
+					String path = url_obj.getPath();
+					String abs_reloc_url;
+					if(path.endsWith(".xml") || path.endsWith(".html") || path.endsWith("htm"))
+						path = path.substring(0,path.lastIndexOf("/"));
+					if(path.endsWith("/"))
+						abs_reloc_url = url_obj.getProtocol() + "://" + url_obj.getHost() + path.substring(0,path.length()-1) + loc;
+					else
+						abs_reloc_url = url_obj.getProtocol() + "://" + url_obj.getHost() + path + loc;
+
+					System.err.println("[debug] re-loc +" + abs_reloc_url);
+					//UrlQueue queue = new UrlQueue();
+					queue_obj.addUrl(abs_reloc_url);
+					return false;
+				} 
+				else 
+				{
+					System.err.println("[debug] re-loc +" + loc);
+					queue_obj.addUrl(loc);
+					return false;
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception here.."+e);
+			}
+			return false;
+		}
+
+		if(response_header.containsKey("content-type"))
+		{
+			// find the value for content type
+			content_type=response_header.get("content-type").split(";")[0];
+
+			if(!content_type.equals("text/html") && !content_type.equals("text/xml") && !content_type.equals("application/xml") && !content_type.endsWith("+xml"))
+			{
+				return false;
+			}
+
+		}	
+		else
+		{
+			return false;
+		}	
+		System.out.println("valid content_type...");
+		// checking for content size
+		String value = response_header.get("content-length");
+		double size=Double.parseDouble(value);
+		if(size > XPathCrawler.document_size*1024*1024)
+		{
+			return false;
+		}
+		System.out.println("valid size");
+		return true;   	
+	}
+
+	public CrawledUrlEntity downloadPage()
+	{
+		System.out.println("inside download page.....");
+		String given_url=client.getUrl();
+		Date last_modified_date=null;
+		String page_content=null;
+		CrawledUrlEntity crawled_page=null;
+
+		if(response_header.containsKey("last-modified"))
+		{
+			String modifiedDate = response_header.get("last-modified");
+			last_modified_date= string_to_date(modifiedDate);
+
+		}	
+		// check if webpage is there in database
+		CrawledUrlEntity page=DBWrapper.getCrawledUrlEntity(given_url);
+		if(page!=null)
+		{
+			// page is there in database
+			Date last_crawled_date= page.getLastCrawledDate();
+			//check if the page was modified
+			if(last_crawled_date.after(last_modified_date))
+			{
+				page_content=page.getContent();
+
+			}
+			else
+			{
+				// if the page got modified store the content in the database
+				page_content=client.obtainContent(given_url);
+				//CrawlerThread.counter++;
+				System.out.println("Content type before adding to db..."+content_type);
+				crawled_page=new CrawledUrlEntity(given_url,page_content,new Date(),content_type);
+				DBWrapper.addCrawledUrlEntity(crawled_page);
+			}	
+
+		}	
+		else
+		{
+			//page not in database and hence store it
+			System.out.println("Inside download");
+			page_content=client.obtainContent(given_url);
+			CrawlerThread.counter++;
+			//System.out.println("Inside download");
+
+			crawled_page=new CrawledUrlEntity(given_url,page_content,new Date(),content_type);
+			//System.out.println("Inside download");
+
+			DBWrapper.addCrawledUrlEntity(crawled_page);
+			//	System.out.println("Inside download");
+
+
+		}	
+		return crawled_page; 
+
+	}
+	/**
+	 * convert  a string to date
+	 * @param str
+	 * @return
+	 */
+
+	public Date string_to_date(String str)
+	{
+		String format1= "EEEEE, dd-MMM-yy HH:mm:ss zzz";
+		String format2= "EEE MMM dd HH:mm:ss yyyy";
+		String format3= "EEE, dd MMM yyyy HH:mm:ss zzz";
+		String format4= "EEE, dd MMM yyyy HH";
+
+		Date date=null;
+		SimpleDateFormat sdf=new SimpleDateFormat(format1);
+		try
+		{
+			date=sdf.parse(str);
+		}
+		catch(ParseException pe)
+		{
+			sdf=new SimpleDateFormat(format2);
+			try
+			{
+				date=sdf.parse(str);	
+			}
+			catch(ParseException pe1)
+			{
+				sdf= new SimpleDateFormat(format3);
+				try
+				{
+					date=sdf.parse(str);
+				}
+				catch(ParseException pe2)
+				{
+					sdf=new SimpleDateFormat(format4);
+					try
+					{
+						date=sdf.parse(str);
+					}
+					catch(ParseException pe3)
+					{
+						return null;
+					}
+				}
+			}
+		}
+		return date;
+
+	}
+
+
+}

@@ -1,0 +1,44 @@
+/*
+ * See the file LICENSE for redistribution information.
+ *
+ * Copyright (c) 2002, 2014 Oracle and/or its affiliates.  All rights reserved.
+ *
+ */
+
+package com.sleepycat.je.tree;
+
+/**
+ * Contains the result of a tree search
+ */
+public class SearchResult {
+
+    public boolean exactParentFound;
+    public IN parent;
+    public int index;
+    /*
+     * Set to true if a search stopped because a child was not resident, and
+     * we are doing a do-not-fetch kind of search.
+     */
+    public boolean childNotResident;
+        
+    public SearchResult() {
+        reset();
+    }
+
+    public void reset() {
+        exactParentFound = false;
+        parent = null;
+        index = -1;
+        childNotResident = false;
+    }
+
+    @Override
+    public String toString() {
+        return
+            "exactParentFound="+ exactParentFound +
+            " parent=" + ((parent == null)? "null":
+                          Long.toString(parent.getNodeId())) +
+            " index=" + index +
+            " childNotResident=" + childNotResident;
+    }
+}
